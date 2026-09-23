@@ -1,0 +1,63 @@
+{
+  "task": {
+    "name": "openarm_real_exp_1",
+    "family": "object_container_storage",
+    "base_config": "taskpacks/openarm_real_exp_1/generation.json",
+    "source_demo": "taskpacks/openarm_real_exp_1/source/source.hdf5",
+    "processed_source_demo": "taskpacks/openarm_real_exp_1/source/processed.hdf5",
+    "scene_file": "taskpacks/openarm_real_exp_1/scene.json"
+  },
+  "collection": {
+    "enabled": false,
+    "backend": "plugin",
+    "task_name": "openarm_real_exp_1",
+    "output": "runs/openarm_real_exp_1/source/openarm_real_exp_1.hdf5"
+  },
+  "annotation": {
+    "boundary_source": "generation_task_spec",
+    "manual_replay_required": true,
+    "replay_step_fields": {
+      "mp_end": "MP_end_step",
+      "replay_end": "subtask_term_step"
+    }
+  },
+  "logic": {
+    "max_plans": 16,
+    "plan_id": "lemon_first",
+    "retarget_policy": "source_effector_first",
+    "nearest_principle": {
+      "enabled": true,
+      "hard_constraint": true,
+      "unresolved_policy": "mark_unresolved"
+    }
+  },
+  "generation": {
+    "backend": "eloggen.generation_runtime.commands.generate",
+    "output_format": "hdf5",
+    "num_demos": 1,
+    "bimanual": true,
+    "robot_type": "OpenArm",
+    "folder": "runs/openarm_real_exp_1/generated_hdf5",
+    "seed": 1,
+    "grasp_order": "task_spec",
+    "print_stage_type": true
+  },
+  "export": {
+    "generated_hdf5": null,
+    "lerobot": {
+      "enabled": false,
+      "output": "runs/openarm_real_exp_1/lerobot",
+      "repo_id": "openarm/openarm_real_exp_1",
+      "task": "openarm_real_exp_1",
+      "robot_type": "openarm",
+      "fps": 30,
+      "ordered_tasks": true,
+      "resume": false,
+      "overwrite": false
+    }
+  },
+  "metadata": {
+    "example": true,
+    "notes": "Full-flow ElogGen pipeline config. Heavy stages are planned as import/API adapters; the lightweight runner can execute task_graph, logic, recipe, and export_config."
+  }
+}

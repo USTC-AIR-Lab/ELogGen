@@ -1,0 +1,7 @@
+repository: https://github.com/StanfordVL/BEHAVIOR-1K
+commit: 2ca5503895b2c81e02226dbe11c3fee1a68b5d6c
+omnigibson_patch: patches/omnigibson-openarm.patch
+openarm_robot: openarm_bimanual.py
+overlays:
+  bddl: src/eloggen/datasets/taskpacks/*/problem.bddl
+  scenes: src/eloggen/datasets/taskpacks/*/scene.json

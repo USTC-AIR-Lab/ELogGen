@@ -1,0 +1,52 @@
+{
+  "task": {
+    "name": "openarm_fruit_basket_bagging",
+    "family": "object_container_storage",
+    "base_config": "taskpacks/openarm_fruit_basket_bagging/generation.json",
+    "source_demo": "taskpacks/openarm_fruit_basket_bagging/source/source.hdf5",
+    "processed_source_demo": "taskpacks/openarm_fruit_basket_bagging/source/processed.hdf5",
+    "scene_file": "taskpacks/openarm_fruit_basket_bagging/scene.json"
+  },
+  "collection": {
+    "enabled": false,
+    "backend": "plugin",
+    "task_name": "openarm_fruit_basket_bagging",
+    "output": "runs/openarm_fruit_basket_bagging/source/source.hdf5"
+  },
+  "annotation": {
+    "boundary_source": "generation_task_spec",
+    "manual_replay_required": true,
+    "replay_step_fields": {"mp_end": "MP_end_step", "replay_end": "subtask_term_step"}
+  },
+  "logic": {
+    "max_plans": 16,
+    "retarget_policy": "source_effector_first",
+    "nearest_principle": {"enabled": true, "hard_constraint": true, "unresolved_policy": "mark_unresolved"}
+  },
+  "generation": {
+    "backend": "eloggen.generation_runtime.commands.generate",
+    "output_format": "hdf5",
+    "num_demos": 1,
+    "bimanual": true,
+    "robot_type": "OpenArm",
+    "folder": "runs/openarm_fruit_basket_bagging/generated_hdf5",
+    "seed": 1,
+    "grasp_order": "task_spec",
+    "print_stage_type": true
+  },
+  "export": {
+    "generated_hdf5": null,
+    "lerobot": {
+      "enabled": false,
+      "output": "runs/openarm_fruit_basket_bagging/lerobot",
+      "repo_id": "openarm/openarm_fruit_basket_bagging",
+      "task": "openarm_fruit_basket_bagging",
+      "robot_type": "openarm",
+      "fps": 30,
+      "ordered_tasks": true,
+      "resume": false,
+      "overwrite": false
+    }
+  },
+  "metadata": {"example": true, "notes": "Full-flow fruit-basket-bagging example."}
+}

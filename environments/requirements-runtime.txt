@@ -1,0 +1,28 @@
+# Pinned direct Python runtime dependencies for ElogGen.
+# Isaac Sim, OmniGibson, BDDL, PyTorch, Curobo, and robomimic are installed
+# separately by scripts/setup_env.sh because they require explicit source
+# commits, special indexes, patches, toolchains, or EULA handling.
+# Machine-local pip/conda snapshots are diagnostic only and are not constraints.
+numpy==1.26.4
+h5py==3.15.1
+pyarrow==25.0.1
+PyYAML==6.0.3
+scipy==1.15.3
+opencv-python==4.11.0.86
+open3d==0.19.0
+cvxpy==1.6.7
+fpsample==1.0.2
+gym==0.26.2
+gymnasium==1.2.3
+imageio==2.37.2
+imageio-ffmpeg==0.6.0
+psutil==7.2.2
+tqdm==4.67.3
+termcolor==3.3.0
+tensorboard==2.20.0
+tensorboardX==2.6.4
+einops==0.8.2
+egl_probe==1.0.1
+ninja==1.13.0
+wandb==0.25.0
+diffusers==0.37.0

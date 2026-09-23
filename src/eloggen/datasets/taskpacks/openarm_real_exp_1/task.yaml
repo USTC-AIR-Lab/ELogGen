@@ -1,0 +1,36 @@
+name: openarm_real_exp_1
+family: object_container_storage
+backend: omnigibson
+files:
+  generation: generation.json
+  scene: scene.json
+  bddl: problem.bddl
+  cameras: cameras.json
+  source: source/source.hdf5
+  processed_source: source/processed.hdf5
+collection:
+  interface: eloggen.collectors.v1
+  action_shape: [16]
+  source_schema: omnigibson_data_wrapper.v1
+processing:
+  interface: EG_TaskPackOmniGibsonInterface
+  interface_type: omnigibson_bimanual
+runtime:
+  difficulty:
+    default: D0
+    variants: [D0, D1, D2]
+  robot:
+    type: OpenArm
+    bimanual: true
+    lerobot_type: openarm
+  compatibility:
+    openarm_cashier_style: true
+  interface:
+    tracked_objects:
+      object_1: object_1
+      object_2: object_2
+      paper_bag_1: paper_bag_1
+      checkout_counter_umnoqh_0: checkout_counter_umnoqh_0
+sha256:
+  source: 9fe8f852fb8dc40f4b6110168b3ee0f239ba754b0f74000fb680d236071c3ffe
+  processed_source: 7184c380325521933346f9c889bc0e7599cb5a3dd386b51891725c6f3d9346b7

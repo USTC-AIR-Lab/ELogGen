@@ -1,0 +1,809 @@
+diff --git a/OmniGibson/omnigibson/__init__.py b/OmniGibson/omnigibson/__init__.py
+index e0b6a4f03..668db8fde 100644
+--- a/OmniGibson/omnigibson/__init__.py
++++ b/OmniGibson/omnigibson/__init__.py
+@@ -134,8 +134,8 @@ def cleanup(*args, **kwargs):
+     # TODO: Currently tempfile removal will fail due to CopyPrim command (for example, GranularSystem in dicing_apple example.)
+     try:
+         shutil.rmtree(tempdir)
+-    except PermissionError:
+-        log.info("Permission error when removing temp files. Ignoring")
++    except (PermissionError, FileNotFoundError):
++        log.info("Permission error or already-removed temp files. Ignoring")
+     from omnigibson.simulator import logo_small
+ 
+     log.info(f"{'-' * 10} Shutting Down {logo_small()} {'-' * 10}")
+diff --git a/OmniGibson/omnigibson/action_primitives/curobo.py b/OmniGibson/omnigibson/action_primitives/curobo.py
+index d663abad7..963a0de24 100644
+--- a/OmniGibson/omnigibson/action_primitives/curobo.py
++++ b/OmniGibson/omnigibson/action_primitives/curobo.py
+@@ -316,13 +316,15 @@ class CuRoboMotionGenerator:
+         robot_world.add_obstacle(mesh_world.mesh[0])
+         robot_world.save_world_as_mesh(file_path)
+ 
+-    def update_obstacles(self, ignore_objects=None):
++    def update_obstacles(self, ignore_objects=None, ignore_links=None):
+         """
+         Updates internal world collision cache representation based on sim state
+ 
+         Args:
+             ignore_objects (None or list of DatasetObject): If specified, objects that should
+                 be ignored when updating obstacles
++            ignore_links (None or dict[str, collection[str]]): Object names mapped to
++                link names that should be omitted while retaining all other links.
+         """
+         obstacles = {"cuboid": None, "sphere": None, "mesh": [], "cylinder": None, "capsule": None}
+         robot_transform = T.pose_inv(T.pose2mat(self.robot.root_link.get_position_orientation()))
+@@ -341,7 +343,14 @@ class CuRoboMotionGenerator:
+                 continue
+             if ignore_objects is not None and obj in ignore_objects:
+                 continue
+-            for link in obj.links.values():
++            ignored_link_names = (ignore_links or {}).get(obj.name, ())
++            for link_key, link in obj.links.items():
++                if (
++                    link_key in ignored_link_names
++                    or link.name in ignored_link_names
++                    or link.prim_path in ignored_link_names
++                ):
++                    continue
+                 for collision_mesh in link.collision_meshes.values():
+                     assert (
+                         collision_mesh.geom_type == "Mesh"
+@@ -362,7 +371,194 @@ class CuRoboMotionGenerator:
+ 
+         world = lazy.curobo.geom.types.WorldConfig(**obstacles)
+         world = world.get_collision_check_world()
+-        self.mg[CuRoboEmbodimentSelection.DEFAULT].update_world(world)
++        for motion_gen in self.mg.values():
++            motion_gen.update_world(world)
++
++    def debug_start_state(self, emb_sel=None, initial_joint_pos=None):
++        """
++        Print detailed diagnostics of the current start state before planning:
++          - bound_violation: joints outside CuRobo internal limits (pre-clamp)
++          - post-clamp: what value will actually be sent to the planner
++        Self/env collision info is reported by CuRobo planner itself.
++        """
++        if emb_sel is None:
++            for k in self.mg:
++                if k != CuRoboEmbodimentSelection.DEFAULT:
++                    emb_sel = k
++                    break
++            if emb_sel is None:
++                emb_sel = CuRoboEmbodimentSelection.DEFAULT
++
++        mg = self.mg[emb_sel]
++        q_phys = (self.robot.get_joint_positions() if initial_joint_pos is None else initial_joint_pos).clone()
++
++        print("[DEBUG_START] ── bound_violation (physics values vs CuRobo limits) ──")
++        try:
++            jl = mg.kinematics.kinematics_config.joint_limits
++            lo = jl.position[0].cpu()
++            hi = jl.position[1].cpu()
++            phys_map = dict(zip(self.robot_joint_names, q_phys.cpu().tolist()))
++            _eps = 1e-6
++
++            violations = []
++            for i, jname in enumerate(jl.joint_names):
++                if jname not in phys_map:
++                    continue
++                val = phys_map[jname]
++                lo_v, hi_v = lo[i].item(), hi[i].item()
++                if val < lo_v:
++                    violations.append((jname, val, "lower", lo_v, lo_v - val,
++                                       max(val, lo_v + _eps)))
++                elif val > hi_v:
++                    violations.append((jname, val, "upper", hi_v, val - hi_v,
++                                       min(val, hi_v - _eps)))
++
++            if violations:
++                for jname, val, side, limit, excess, clamped in violations:
++                    print(f"  {jname}: q={val:.8f} > {side}={limit:.8f} by {excess:.2e}  → clamp to {clamped:.8f}")
++            else:
++                print("  (none)")
++        except Exception as e:
++            print(f"  ERROR: {e}")
++
++    def _get_robot_kinematics_scale(self, device=None, dtype=None):
++        """
++        Return OG robot scale as a 3-vector when CuRobo kinematics need correction.
++
++        CuRobo builds kinematics from the unscaled robot asset. If an OG robot is
++        spawned with a non-unit scale, world targets converted into robot-local
++        coordinates need to be divided by that scale before planning. Joint values
++        and orientations are unchanged.
++        """
++        robot_scale = getattr(self.robot, "scale", None)
++        if robot_scale is None:
++            return None
++
++        scale = th.as_tensor(robot_scale, device=device, dtype=dtype).reshape(-1)
++        if scale.numel() == 1:
++            scale = scale.repeat(3)
++        scale = scale[:3]
++
++        if th.allclose(scale, th.ones_like(scale)):
++            return None
++        return scale
++
++    def debug_openarm_source_joint_target(self, src_action, target_pos, target_quat, emb_sel, label="source_action"):
++        """
++        Diagnose whether an OpenArm source joint command reaches the requested CuRobo target.
++
++        This is intentionally read-only. It compares:
++          - source joint command vs CuRobo active joint limits
++          - CuRobo FK at that source joint command vs the target pose used for IK
++          - current OG FK after temporarily applying the same source joint command
++        """
++        print(f"[IK_DIAG][OPENARM] ── source joint FK check: {label} ──")
++        try:
++            if not hasattr(self.robot, "arm_control_idx"):
++                print("  skipped: robot has no arm_control_idx")
++                return
++
++            src_action = th.as_tensor(src_action, dtype=th.float32)
++            if src_action.numel() < 15:
++                print(f"  skipped: expected >=15D OpenArm action, got shape={tuple(src_action.shape)}")
++                return
++
++            q_full = self.robot.get_joint_positions().clone()
++            q_full[self.robot.arm_control_idx["left"]] = src_action[:7].to(q_full.device, dtype=q_full.dtype)
++            q_full[self.robot.arm_control_idx["right"]] = src_action[8:15].to(q_full.device, dtype=q_full.dtype)
++
++            mg = self.mg[emb_sel]
++            jl = mg.kinematics.kinematics_config.joint_limits
++            q_map = dict(zip(self.robot_joint_names, q_full.detach().cpu().tolist()))
++            limit_violations = []
++            for i, jname in enumerate(jl.joint_names):
++                if jname not in q_map:
++                    continue
++                val = q_map[jname]
++                lo = jl.position[0][i].item()
++                hi = jl.position[1][i].item()
++                if val < lo or val > hi:
++                    limit_violations.append((jname, val, lo, hi))
++            if limit_violations:
++                print("  source joints outside CuRobo limits:")
++                for jname, val, lo, hi in limit_violations:
++                    print(f"    {jname}: q={val:.6f}, limit=[{lo:.6f}, {hi:.6f}]")
++            else:
++                print("  source joints within CuRobo active limits")
++
++            cu_js = lazy.curobo.types.state.JointState(
++                position=self._tensor_args.to_device(q_full.unsqueeze(0)),
++                joint_names=self.robot_joint_names,
++            )
++            self.update_locked_joints(cu_js, emb_sel)
++            cu_js_ordered = cu_js.get_ordered_joint_state(mg.kinematics.joint_names)
++            robot_state = mg.kinematics.compute_kinematics(cu_js_ordered)
++
++            for link_name, tgt_pos in target_pos.items():
++                if link_name not in robot_state.link_poses:
++                    available = sorted(robot_state.link_poses.keys())
++                    print(f"  {link_name}: missing in CuRobo FK link_poses; available={available}")
++                    continue
++
++                fk_pose = robot_state.link_poses[link_name]
++                fk_pos = fk_pose.position[0].detach().cpu()
++                # CuRobo stores quaternions as wxyz; ElogGen generation runtime / OG use xyzw.
++                fk_quat = fk_pose.quaternion[0][[1, 2, 3, 0]].detach().cpu()
++                tgt_pos_0_world = th.as_tensor(
++                    tgt_pos[0] if getattr(tgt_pos, "dim", lambda: 1)() > 1 else tgt_pos
++                ).detach().cpu()
++                tgt_quat = target_quat[link_name]
++                tgt_quat_0_world = th.as_tensor(
++                    tgt_quat[0] if getattr(tgt_quat, "dim", lambda: 1)() > 1 else tgt_quat
++                ).detach().cpu()
++
++                base_pos, base_quat = self.robot.links[self.base_link[emb_sel]].get_position_orientation()
++                tgt_pose_world = T.pose2mat((tgt_pos_0_world, tgt_quat_0_world))
++                tgt_pose_local = T.pose_inv(T.pose2mat((base_pos, base_quat))) @ tgt_pose_world
++                tgt_pos_0 = tgt_pose_local[:3, 3].detach().cpu()
++                tgt_quat_0 = T.mat2quat(tgt_pose_local[:3, :3]).detach().cpu()
++                robot_scale = self._get_robot_kinematics_scale(device=tgt_pos_0.device, dtype=tgt_pos_0.dtype)
++                if robot_scale is not None:
++                    tgt_pos_0 = tgt_pos_0 / robot_scale.detach().cpu()
++                    print(
++                        "  applying CuRobo kinematics scale correction: "
++                        f"local target / {robot_scale.detach().cpu().tolist()}"
++                    )
++
++                pos_err = th.linalg.norm(fk_pos - tgt_pos_0).item()
++                rot_err = T.get_orientation_diff_in_radian(fk_quat, tgt_quat_0).item()
++                print(
++                    f"  CuRobo FK {link_name}: pos={fk_pos.tolist()}, quat={fk_quat.tolist()}, "
++                    f"target_local_pos={tgt_pos_0.tolist()}, target_local_quat={tgt_quat_0.tolist()}, "
++                    f"pos_err={pos_err:.6f}, rot_err={rot_err:.6f}"
++                )
++
++            q_before = self.robot.get_joint_positions().clone()
++            try:
++                self.robot.set_joint_positions(q_full)
++                og.sim.step()
++                for link_name in target_pos.keys():
++                    if link_name not in self.robot.links:
++                        continue
++                    og_pos, og_quat = self.robot.links[link_name].get_position_orientation()
++                    tgt_pos = target_pos[link_name]
++                    tgt_quat = target_quat[link_name]
++                    tgt_pos_0 = th.as_tensor(tgt_pos[0] if getattr(tgt_pos, "dim", lambda: 1)() > 1 else tgt_pos).detach().cpu()
++                    tgt_quat_0 = th.as_tensor(tgt_quat[0] if getattr(tgt_quat, "dim", lambda: 1)() > 1 else tgt_quat).detach().cpu()
++                    og_pos = th.as_tensor(og_pos).detach().cpu()
++                    og_quat = th.as_tensor(og_quat).detach().cpu()
++                    pos_err = th.linalg.norm(og_pos - tgt_pos_0).item()
++                    rot_err = T.get_orientation_diff_in_radian(og_quat, tgt_quat_0).item()
++                    print(
++                        f"  OG FK {link_name}: pos={og_pos.tolist()}, quat={og_quat.tolist()}, "
++                        f"target_pos={tgt_pos_0.tolist()}, target_quat={tgt_quat_0.tolist()}, "
++                        f"pos_err={pos_err:.6f}, rot_err={rot_err:.6f}"
++                    )
++            finally:
++                self.robot.set_joint_positions(q_before)
++                og.sim.step()
++        except Exception as e:
++            print(f"  [IK_DIAG][OPENARM] source joint FK check failed: {e}")
+ 
+     def check_collisions(
+         self,
+@@ -600,6 +796,7 @@ class CuRoboMotionGenerator:
+         attached_obj_scale=None,
+         motion_constraint=None,
+         skip_obstacle_update=False,
++        ignore_obstacle_links=None,
+         ik_only=False,
+         ik_world_collision_check=True,
+         eyes_target_pos=None,
+@@ -644,6 +841,8 @@ class CuRoboMotionGenerator:
+                 locks that axis, forcing the planner to reach the target using only the remaining unlocked axes.
+                 Details can be found here: https://curobo.org/advanced_examples/3_constrained_planning.html
+             skip_obstacle_update (bool): Whether to skip updating the obstacles in the world collision checker
++            ignore_obstacle_links (None or dict[str, collection[str]]): Object/link names
++                omitted from the CuRobo world for this request.
+             ik_only (bool): Whether to only run the IK solver and not the trajectory optimization
+             ik_world_collision_check (bool): Whether to check for collisions in the world when running the IK solver for ik_only mode
+             eyes_target_pos (None or Dict[str, th.Tensor] or th.Tensor): If specified, the target position for the eyes to look at (visibility cost)
+@@ -672,7 +871,7 @@ class CuRoboMotionGenerator:
+         #     return None, None if not return_full_result else None
+ 
+         if not skip_obstacle_update:
+-            self.update_obstacles()
++            self.update_obstacles(ignore_links=ignore_obstacle_links)
+ 
+         # If target_pos and target_quat are torch tensors, it's assumed that they correspond to the default ee_link
+         if isinstance(target_pos, th.Tensor):
+@@ -716,6 +915,12 @@ class CuRoboMotionGenerator:
+                 target_pose = inv_robot_pose.view(1, 4, 4) @ target_pose
+                 target_pos_link = target_pose[:, :3, 3]
+                 target_quat_link = T.mat2quat(target_pose[:, :3, :3])
++                robot_scale = self._get_robot_kinematics_scale(
++                    device=target_pos_link.device,
++                    dtype=target_pos_link.dtype,
++                )
++                if robot_scale is not None:
++                    target_pos_link = target_pos_link / robot_scale.view(1, 3)
+ 
+             # Map xyzw -> wxyz quat
+             target_quat_link = target_quat_link[:, [3, 0, 1, 2]]
+@@ -745,6 +950,12 @@ class CuRoboMotionGenerator:
+                     target_pose = inv_robot_pose.view(1, 4, 4) @ target_pose
+                     eyes_target_pos_link = target_pose[:, :3, 3]
+                     eyes_target_quat_link = T.mat2quat(target_pose[:, :3, :3])
++                    robot_scale = self._get_robot_kinematics_scale(
++                        device=eyes_target_pos_link.device,
++                        dtype=eyes_target_pos_link.dtype,
++                    )
++                    if robot_scale is not None:
++                        eyes_target_pos_link = eyes_target_pos_link / robot_scale.view(1, 3)
+ 
+                 # Map xyzw -> wxyz quat
+                 eyes_target_quat_link = eyes_target_quat_link[:, [3, 0, 1, 2]]
+@@ -785,6 +996,21 @@ class CuRoboMotionGenerator:
+             q_vel = th.zeros_like(q_pos)
+             q_eff = th.zeros_like(q_pos)
+ 
++        # Clamp q_pos to CuRobo's joint limits before passing to the planner.
++        # Tiny floating-point errors (e.g. q=-1e-10 when lower=0) cause
++        # "Start state failed bound check" and abort planning entirely.
++        try:
++            jl = self.mg[emb_sel].kinematics.kinematics_config.joint_limits
++            _eps = 1e-6
++            for _i, _jname in enumerate(jl.joint_names):
++                if _jname in self.robot_joint_names:
++                    _idx = self.robot_joint_names.index(_jname)
++                    _lo = jl.position[0][_i].item() + _eps
++                    _hi = jl.position[1][_i].item() - _eps
++                    q_pos[:, _idx] = q_pos[:, _idx].clamp(_lo, _hi)
++        except Exception as _clamp_e:
++            print(f"[WARN] joint clamp failed: {_clamp_e}")
++
+         cu_joint_state = lazy.curobo.types.state.JointState(
+             position=self._tensor_args.to_device(q_pos),
+             # TODO: Ideally these should be nonzero, but curobo fails to compute a solution if so
+diff --git a/OmniGibson/omnigibson/action_primitives/starter_semantic_action_primitives.py b/OmniGibson/omnigibson/action_primitives/starter_semantic_action_primitives.py
+index 56bf96967..c17c302cf 100644
+--- a/OmniGibson/omnigibson/action_primitives/starter_semantic_action_primitives.py
++++ b/OmniGibson/omnigibson/action_primitives/starter_semantic_action_primitives.py
+@@ -173,6 +173,7 @@ class StarterSemanticActionPrimitives(BaseActionPrimitiveSet):
+         curobo_batch_size=4,
+         curobo_use_cuda_graph=True,
+         curobo_embodiment_types=None,
++        curobo_motion_cfg_kwargs=None,
+         debug_visual_marker=None,
+         skip_curobo_initilization=False,
+         use_base_pose_hack=False,
+@@ -227,6 +228,7 @@ class StarterSemanticActionPrimitives(BaseActionPrimitiveSet):
+                 embodiment_types=curobo_embodiment_types,
+                 use_eyes_targets=enable_head_tracking,
+                 restrict_torso_joint_limits=real_robot_mode,
++                motion_cfg_kwargs=curobo_motion_cfg_kwargs,
+             )
+         )
+ 
+diff --git a/OmniGibson/omnigibson/envs/data_wrapper.py b/OmniGibson/omnigibson/envs/data_wrapper.py
+index 96494c93b..615593602 100644
+--- a/OmniGibson/omnigibson/envs/data_wrapper.py
++++ b/OmniGibson/omnigibson/envs/data_wrapper.py
+@@ -20,6 +20,7 @@ from omnigibson.systems.macro_particle_system import MacroPhysicalParticleSystem
+ from omnigibson.utils.config_utils import TorchEncoder
+ from omnigibson.utils.data_utils import merge_scene_files
+ from omnigibson.utils.python_utils import create_object_from_init_info, h5py_group_to_torch
++from omnigibson.utils import transform_utils as T
+ from omnigibson.utils.ui_utils import create_module_logger
+ from omnigibson.tasks.behavior_task import BehaviorTask
+ from omnigibson.controllers.controller_base import ControlType
+@@ -29,6 +30,24 @@ log = create_module_logger(module_name=__name__)
+ log.setLevel(logging.INFO)
+ 
+ 
++def _set_cashier_annotation_viewer_camera():
++    scene = og.sim.scenes[0]
++    if scene.object_registry("name", "checkout_counter_umnoqh_0") is None:
++        return
++
++    camera_pos = th.tensor([0.84451, 4.1226, 2.57063], dtype=th.float32)
++    # Same fixed viewer pose as robomimic/envs/env_omnigibson.py generation.
++    # Quaternion is xyzw from R.from_euler("zyx", [80.176, 50.592, 7.621], degrees=True).
++    camera_quat = th.tensor([0.32052181, 0.28748971, 0.60265321, 0.67188135], dtype=th.float32)
++    og.sim.viewer_camera.horizontal_aperture = 35.0
++    og.sim.viewer_camera.set_position_orientation(
++        position=camera_pos,
++        orientation=camera_quat,
++    )
++    if og.sim.viewer_camera.active_camera_path != og.sim.viewer_camera.prim_path:
++        og.sim.viewer_camera.active_camera_path = og.sim.viewer_camera.prim_path
++
++
+ try:
+     from omnigibson.learning.utils.obs_utils import write_video
+ except ImportError:
+@@ -960,7 +979,7 @@ class DataPlaybackWrapper(DataWrapper):
+         step_data["truncated"] = truncated
+         return step_data
+ 
+-    def playback_episode(self, episode_id, record_data=True, video_writers=None, callback=None, replay_for_annotation=False, break_after_n_steps=100):
++    def playback_episode(self, episode_id, record_data=True, video_writers=None, callback=None, replay_for_annotation=False, break_after_n_steps=25):
+         """
+         Playback episode @episode_id, and optionally record observation data if @record is True
+ 
+@@ -1038,6 +1057,7 @@ class DataPlaybackWrapper(DataWrapper):
+ 
+         # Print all object names in the scene
+         if replay_for_annotation:
++            _set_cashier_annotation_viewer_camera()
+             print(f"================= object names in the scene =================")
+             all_objs = og.sim.scenes[0].objects
+             print([o.name for o in all_objs])
+@@ -1047,6 +1067,7 @@ class DataPlaybackWrapper(DataWrapper):
+         ):
+             if replay_for_annotation:
+                 if i % break_after_n_steps == 0:
++                    _set_cashier_annotation_viewer_camera()
+                     print(f"================= simulation step {i} =================")
+                     # Note: You can use the following to step the rendering in OG: for _ in range(500): og.sim.render()
+                     # And then you can click on objects in the viewer to get the OG specific name of the object
+@@ -1090,6 +1111,8 @@ class DataPlaybackWrapper(DataWrapper):
+                             lin_vels=th.zeros((system.n_particles, 3)), ang_vels=th.zeros((system.n_particles, 3))
+                         )
+             self.current_obs, _, _, _, info = self.env.step(action=a, n_render_iterations=self.n_render_iterations)
++            if replay_for_annotation:
++                _set_cashier_annotation_viewer_camera()
+ 
+             # If recording, record data
+             if record_data:
+@@ -1255,7 +1278,14 @@ class DataPlaybackWrapper(DataWrapper):
+             writer.close()
+ 
+     def playback_dataset(
+-        self, record_data=False, video_writers=None, video_rgb_keys=None, callback=None, demo_ids=None, replay_for_annotation=False
++        self,
++        record_data=False,
++        video_writers=None,
++        video_rgb_keys=None,
++        callback=None,
++        demo_ids=None,
++        replay_for_annotation=False,
++        steps=50,
+     ):
+         """
+         Playback all episodes from the input HDF5 file, and optionally record observation data if @record is True
+@@ -1267,6 +1297,7 @@ class DataPlaybackWrapper(DataWrapper):
+                 If @video_writer is specified, this must also be specified!
+             demo_ids (None or list of int): If specified, a list of episode IDs to playback. If None, all episodes will be played
+             replay_for_annotation (bool): If True, replay the dataset to break after X steps to note down the MP_end_step and subtask_term_step for each subtask
++            steps (int): Number of replay steps between annotation breakpoints when @replay_for_annotation is True
+         """
+         results = []
+         if demo_ids is None:
+@@ -1278,6 +1309,7 @@ class DataPlaybackWrapper(DataWrapper):
+                         video_writers=video_writers,
+                         callback=callback,
+                         replay_for_annotation=replay_for_annotation,
++                        break_after_n_steps=steps,
+                     )
+                 )
+         else:
+@@ -1289,6 +1321,7 @@ class DataPlaybackWrapper(DataWrapper):
+                         video_writers=video_writers,
+                         callback=callback,
+                         replay_for_annotation=replay_for_annotation,
++                        break_after_n_steps=steps,
+                     )
+                 )
+         return results
+diff --git a/OmniGibson/omnigibson/examples/robots/import_custom_robot.py b/OmniGibson/omnigibson/examples/robots/import_custom_robot.py
+old mode 100644
+new mode 100755
+index 7cbff829e..3efa67262
+--- a/OmniGibson/omnigibson/examples/robots/import_custom_robot.py
++++ b/OmniGibson/omnigibson/examples/robots/import_custom_robot.py
+@@ -21,6 +21,7 @@ from omnigibson.utils.asset_conversion_utils import (
+     find_all_prim_children_with_type,
+     import_og_asset_from_urdf,
+ )
++from omnigibson.utils.asset_utils import get_dataset_path
+ from omnigibson.utils.python_utils import assert_valid_key
+ from omnigibson.utils.usd_utils import create_joint, create_primitive_mesh
+ 
+@@ -849,6 +850,7 @@ def import_custom_robot(config):
+     urdf_path, usd_path, prim = import_og_asset_from_urdf(
+         category="robot",
+         model=cfg.name,
++        dataset_root=get_dataset_path("custom_dataset"),
+         urdf_path=cfg.urdf_path,
+         collision_method=cfg.collision.decompose_method,
+         coacd_links=cfg.collision.coacd_links,
+diff --git a/OmniGibson/omnigibson/prims/entity_prim.py b/OmniGibson/omnigibson/prims/entity_prim.py
+old mode 100644
+new mode 100755
+index 84fa578ff..b83b99b92
+--- a/OmniGibson/omnigibson/prims/entity_prim.py
++++ b/OmniGibson/omnigibson/prims/entity_prim.py
+@@ -224,6 +224,24 @@ class EntityPrim(XFormPrim):
+                 # For cloth objects, process Meshes as cloth links
+                 links_to_create[link_name] = (PrimType.CLOTH, prim)
+ 
++        # Compatibility: some imported USDs place joints under a top-level "joints" scope
++        # instead of nesting them under each link. In that case, collect body1 targets here.
++        if self._prim_type == PrimType.RIGID:
++            joints_scope = self._prim.GetChild("joints")
++            if joints_scope.IsValid():
++                for joint_prim in joints_scope.GetChildren():
++                    if "joint" not in joint_prim.GetPrimTypeInfo().GetTypeName().lower():
++                        continue
++                    relationships = {r.GetName(): r for r in joint_prim.GetRelationships()}
++                    if "physics:body0" not in relationships or "physics:body1" not in relationships:
++                        continue
++                    body0_targets = relationships["physics:body0"].GetTargets()
++                    body1_targets = relationships["physics:body1"].GetTargets()
++                    # Keep behavior consistent with the original logic:
++                    # ignore world-fix style joints where body0 is empty.
++                    if len(body0_targets) > 0 and len(body1_targets) > 0:
++                        joint_children.add(body1_targets[0].pathString.split("/")[-1])
++
+         # Infer the correct root link name -- this corresponds to whatever link does not have any joint existing
+         # in the children joints
+         valid_root_links = list(set(links_to_create.keys()) - joint_children)
+diff --git a/OmniGibson/omnigibson/prims/rigid_prim.py b/OmniGibson/omnigibson/prims/rigid_prim.py
+old mode 100644
+new mode 100755
+index 57ee412bb..b8bd72d98
+--- a/OmniGibson/omnigibson/prims/rigid_prim.py
++++ b/OmniGibson/omnigibson/prims/rigid_prim.py
+@@ -159,6 +159,29 @@ class RigidPrim(XFormPrim):
+         # Then self
+         super().remove()
+ 
++    def _mesh_transform_in_link_frame(self, mesh):
++        """
++        Gets the mesh transform expressed in this link's local frame.
++
++        This is needed for imported assets that place collision meshes under
++        intermediate Xforms such as collisions/<name>/mesh.
++        """
++        return th.linalg.inv(self.scaled_transform) @ mesh.scaled_transform
++
++    def _mesh_points_in_link_frame(self, mesh):
++        points = mesh.points
++        if points is None:
++            return None
++        return T.transform_points(points, self._mesh_transform_in_link_frame(mesh))
++
++    def _mesh_com_and_volume_in_link_frame(self, mesh, mesh_prim):
++        volume, com = get_mesh_volume_and_com(mesh_prim)
++        mesh_to_link = self._mesh_transform_in_link_frame(mesh)
++        com_in_link = T.transform_points(com.unsqueeze(0), mesh_to_link).squeeze(0)
++        # Volume scales with the determinant of the linear transform.
++        volume_scale = th.abs(th.det(mesh_to_link[:3, :3]))
++        return volume * volume_scale, com_in_link
++
+     def update_meshes(self):
+         """
+         Helper function to refresh owned visual and collision meshes. Useful for synchronizing internal data if
+@@ -166,17 +189,39 @@ class RigidPrim(XFormPrim):
+         """
+         self._collision_meshes, self._visual_meshes = dict(), dict()
+         prims_to_check = []
++        seen_prim_paths = set()
+         coms, vols = [], []
+-        for prim in self._prim.GetChildren():
++
++        def prim_or_ancestor_has_collision_api(prim):
++            cur = prim
++            root_path = self._prim.GetPrimPath()
++            while cur and cur.IsValid():
++                if cur.HasAPI(lazy.pxr.UsdPhysics.CollisionAPI):
++                    return True
++                if cur.GetPrimPath() == root_path:
++                    break
++                cur = cur.GetParent()
++            return False
++
++        # Recursively traverse descendants because some imported robots nest collision meshes under
++        # intermediate Xforms (e.g. collisions/<name>/mesh), which would otherwise be skipped.
++        prim_stack = list(self._prim.GetChildren())
++        while prim_stack:
++            prim = prim_stack.pop()
++            prim_path = prim.GetPrimPath().__str__()
++            if prim_path in seen_prim_paths:
++                continue
++            seen_prim_paths.add(prim_path)
+             prims_to_check.append(prim)
+-            for child in prim.GetChildren():
+-                prims_to_check.append(child)
++            prim_stack.extend(list(prim.GetChildren()))
++
+         for prim in prims_to_check:
+             mesh_type = prim.GetPrimTypeInfo().GetTypeName()
+             if mesh_type in GEOM_TYPES:
+-                mesh_name, mesh_path = prim.GetName(), prim.GetPrimPath().__str__()
++                mesh_path = prim.GetPrimPath().__str__()
++                mesh_name = mesh_path.replace("/", "_")
+                 mesh_prim = lazy.isaacsim.core.utils.prims.get_prim_at_path(prim_path=mesh_path)
+-                is_collision = mesh_prim.HasAPI(lazy.pxr.UsdPhysics.CollisionAPI)
++                is_collision = prim_or_ancestor_has_collision_api(mesh_prim)
+                 mesh_kwargs = {
+                     "relative_prim_path": absolute_prim_path_to_scene_relative(self.scene, mesh_path),
+                     "name": f"{self._name}:{'collision' if is_collision else 'visual'}_{mesh_name}",
+@@ -191,11 +236,9 @@ class RigidPrim(XFormPrim):
+                     mesh.set_rest_offset(m.DEFAULT_REST_OFFSET)
+                     self._collision_meshes[mesh_name] = mesh
+ 
+-                    volume, com = get_mesh_volume_and_com(mesh_prim)
+-                    # We need to transform the volume and CoM from the mesh's local frame to the link's local frame
+-                    local_pos, local_orn = mesh.get_position_orientation(frame="parent")
+-                    vols.append(volume * th.prod(mesh.scale))
+-                    coms.append(T.quat2mat(local_orn) @ (com * mesh.scale) + local_pos)
++                    volume, com = self._mesh_com_and_volume_in_link_frame(mesh, mesh_prim)
++                    vols.append(volume)
++                    coms.append(com)
+                     # If the ratio between the max extent and min radius is too large (i.e. shape too oblong), use
+                     # boundingCube approximation for the underlying collision approximation for GPU compatibility
+                     if not check_extent_radius_ratio(mesh, com):
+@@ -365,7 +408,7 @@ class RigidPrim(XFormPrim):
+         points = []
+ 
+         for mesh in meshes.values():
+-            mesh_points = mesh.points_in_parent_frame
++            mesh_points = self._mesh_points_in_link_frame(mesh)
+             if mesh_points is not None and len(mesh_points) > 0:
+                 points.append(mesh_points)
+ 
+diff --git a/OmniGibson/omnigibson/prims/xform_prim.py b/OmniGibson/omnigibson/prims/xform_prim.py
+old mode 100644
+new mode 100755
+index 05e347af7..877713172
+--- a/OmniGibson/omnigibson/prims/xform_prim.py
++++ b/OmniGibson/omnigibson/prims/xform_prim.py
+@@ -70,7 +70,12 @@ class XFormPrim(BasePrim):
+ 
+         # Cache the original scale from the USD so that when EntityPrim sets the scale for each link (Rigid/ClothPrim),
+         # the new scale is with respect to the original scale. XFormPrim's scale always matches the scale in the USD.
+-        self.original_scale = th.tensor(self.get_attribute("xformOp:scale"))
++        usd_scale = self.get_attribute("xformOp:scale")
++        # Some imported custom assets may miss xformOp:scale on specific prims.
++        # Default to identity scale so loading remains robust.
++        if usd_scale is None:
++            usd_scale = (1.0, 1.0, 1.0)
++        self.original_scale = th.tensor(usd_scale)
+ 
+         # Grab the attached material if it exists
+         if self.has_material():
+@@ -218,19 +223,33 @@ class XFormPrim(BasePrim):
+ 
+         # Actually set the local pose now.
+         properties = self.prim.GetPropertyNames()
++        translate_attr = self._prim.GetAttribute("xformOp:translate")
++        orient_attr = self._prim.GetAttribute("xformOp:orient")
++        # Some imported custom assets carry malformed xform attributes (existing name but empty type).
++        # Rebuild canonical xform ops on demand so set_position_orientation can proceed.
++        if (
++            "xformOp:translate" not in properties
++            or "xformOp:orient" not in properties
++            or translate_attr.GetTypeName() == ""
++            or orient_attr.GetTypeName() == ""
++        ):
++            self._set_xform_properties()
++            properties = self.prim.GetPropertyNames()
++            translate_attr = self._prim.GetAttribute("xformOp:translate")
++            orient_attr = self._prim.GetAttribute("xformOp:orient")
++
+         position = lazy.pxr.Gf.Vec3d(*position.tolist())
+         if "xformOp:translate" not in properties:
+             logger.error("Translate property needs to be set for {} before setting its position".format(self.name))
+-        self.set_attribute("xformOp:translate", position)
++        translate_attr.Set(position)
+         orientation = orientation[[3, 0, 1, 2]].tolist()
+         if "xformOp:orient" not in properties:
+             logger.error("Orient property needs to be set for {} before setting its orientation".format(self.name))
+-        xform_op = self._prim.GetAttribute("xformOp:orient")
+-        if xform_op.GetTypeName() == "quatf":
++        if orient_attr.GetTypeName() == "quatf":
+             rotq = lazy.pxr.Gf.Quatf(*orientation)
+         else:
+             rotq = lazy.pxr.Gf.Quatd(*orientation)
+-        xform_op.Set(rotq)
++        orient_attr.Set(rotq)
+         PoseAPI.invalidate()
+         if gm.ENABLE_FLATCACHE:
+             # If flatcache is on, make sure the USD local pose is synced to the fabric local pose.
+diff --git a/OmniGibson/omnigibson/robots/__init__.py b/OmniGibson/omnigibson/robots/__init__.py
+index ad5625ea0..ee4cba2de 100644
+--- a/OmniGibson/omnigibson/robots/__init__.py
++++ b/OmniGibson/omnigibson/robots/__init__.py
+@@ -9,6 +9,9 @@ from omnigibson.robots.husky import Husky
+ from omnigibson.robots.locobot import Locobot
+ from omnigibson.robots.locomotion_robot import LocomotionRobot
+ from omnigibson.robots.manipulation_robot import ManipulationRobot
++# from omnigibson.robots.openarm_bimanual import OpenArmBimanual
++# from omnigibson.robots.openarm_bimanual_v2 import OpenArmBimanualV2
++from omnigibson.robots.openarm_bimanual import OpenArmBimanual
+ from omnigibson.robots.r1 import R1
+ from omnigibson.robots.r1pro import R1Pro
+ from omnigibson.robots.robot_base import REGISTERED_ROBOTS, BaseRobot
+@@ -31,6 +34,8 @@ __all__ = [
+     "Locobot",
+     "LocomotionRobot",
+     "ManipulationRobot",
++    "OpenArmBimanual",
++    # "OpenArmBimanualV2",
+     "R1",
+     "R1Pro",
+     "REGISTERED_ROBOTS",
+diff --git a/OmniGibson/omnigibson/robots/manipulation_robot.py b/OmniGibson/omnigibson/robots/manipulation_robot.py
+index 55471cd4b..d2c9988c5 100644
+--- a/OmniGibson/omnigibson/robots/manipulation_robot.py
++++ b/OmniGibson/omnigibson/robots/manipulation_robot.py
+@@ -56,7 +56,9 @@ m.MAX_AG_DEFAULT_GRASP_POINT_PROP = 0.95
+ m.AG_DEFAULT_GRASP_POINT_Z_PROP = 0.4
+ 
+ m.CONSTRAINT_VIOLATION_THRESHOLD = 0.1
+-m.GRASP_WINDOW = 3.0  # grasp window in seconds
++# m.GRASP_WINDOW = 3
++# m.GRASP_WINDOW = 0.5  # grasp window in seconds (reduced from 3.0 for teleoperation compatibility)
++m.GRASP_WINDOW = 0.0  # grasp window = 0: 接触后下一帧立即吸附（VR遥操作：接触不稳定，不能要求连续N帧）
+ m.RELEASE_WINDOW = 1 / 30.0  # release window in seconds
+ 
+ AG_MODES = {
+diff --git a/OmniGibson/omnigibson/utils/asset_conversion_utils.py b/OmniGibson/omnigibson/utils/asset_conversion_utils.py
+old mode 100644
+new mode 100755
+index 458106e2c..b175d46cd
+--- a/OmniGibson/omnigibson/utils/asset_conversion_utils.py
++++ b/OmniGibson/omnigibson/utils/asset_conversion_utils.py
+@@ -1141,13 +1141,29 @@ def convert_urdf_to_usd(
+ 
+         # Find the child prim - it's actually away at a reference. There should be exactly one.
+         references = parent_prim.GetPrimStack()[0].referenceList.prependedItems
+-        assert len(references) == 1, f"{parent_path} is not a reference!"
++        if len(references) != 1:
++            log.warning(f"Skipping wrapper {parent_path}: expected exactly one reference, got {len(references)}")
++            continue
+         referenced_wrapper_path_str = str(references[0].primPath)
+         referenced_wrapper_prim = side_stage.GetPrimAtPath(referenced_wrapper_path_str)
+-        assert referenced_wrapper_prim.IsValid()
++        if not referenced_wrapper_prim.IsValid():
++            log.warning(f"Skipping wrapper {parent_path}: invalid referenced prim {referenced_wrapper_path_str}")
++            continue
+ 
++        # Common case: wrapper contains a child prim named "mesh"
+         child_prim = referenced_wrapper_prim.GetChild("mesh")
+-        assert child_prim.IsValid()
++        # Some imports reference a mesh prim directly, e.g. /meshes/finger
++        if not child_prim.IsValid() and referenced_wrapper_prim.GetTypeName() == "Mesh":
++            child_prim = referenced_wrapper_prim
++        if not child_prim.IsValid():
++            # Some URDF importers generate a different wrapper layout where the mesh prim is not
++            # named exactly "mesh". Fall back to finding the first Mesh prim under this wrapper.
++            mesh_prims = find_all_prim_children_with_type(prim_type="Mesh", root_prim=referenced_wrapper_prim)
++            if len(mesh_prims) > 0:
++                child_prim = mesh_prims[0]
++        if not child_prim.IsValid():
++            log.warning(f"Skipping wrapper {parent_path}: no mesh prim under {referenced_wrapper_path_str}")
++            continue
+         child_path = child_prim.GetPath()
+ 
+         # Duplicate the properties on the parent prim onto the child.
+@@ -1173,8 +1189,11 @@ def convert_urdf_to_usd(
+         # Delete the child's original path
+         del side_stage.GetRootLayer().GetPrimAtPath(child_path.GetParentPath()).nameChildren[child_path.name]
+ 
+-    # Remove the meshes hierarchy altogether
+-    del side_stage.GetRootLayer().rootPrims["meshes"]
++    # NOTE:
++    # Some custom URDF imports keep references that still point to /meshes/* prims.
++    # Removing the meshes hierarchy can then create unresolved-reference warnings.
++    # Keep the /meshes tree for compatibility with custom robots.
++    # del side_stage.GetRootLayer().rootPrims["meshes"]
+ 
+     # Delete any collision groups
+     for child_prim in list(side_stage.Traverse()):
+@@ -1195,7 +1214,8 @@ def convert_urdf_to_usd(
+         # Check if the prim has a reference on it
+         references = possible_referrer.GetPrimStack()[0].referenceList.prependedItems
+         if references:
+-            assert possible_referrer.GetName() in ["visuals", "collisions"]
++            if possible_referrer.GetName() not in ["visuals", "collisions", "colliders"]:
++                continue
+             assert (
+                 len(references) == 1
+             ), f"Expected exactly one reference for {possible_referrer.GetPath()}, got {len(references)}"
+@@ -1222,7 +1242,7 @@ def convert_urdf_to_usd(
+             mesh_prim = side_stage.DefinePrim(referrer_prim.GetPath().AppendChild(name), prim_type)
+ 
+             # Add the collision APIs
+-            if referrer_prim_path.name == "collisions":
++            if referrer_prim_path.name in {"collisions", "colliders"}:
+                 collision_api = lazy.pxr.UsdPhysics.CollisionAPI.Apply(mesh_prim)
+                 mesh_collision_api = lazy.pxr.UsdPhysics.MeshCollisionAPI.Apply(mesh_prim)
+                 mesh_collision_api.GetApproximationAttr().Set("convexHull")
+@@ -2464,7 +2484,7 @@ def import_og_asset_from_urdf(
+         urdf_path=urdf_path,
+         obj_category=category,
+         obj_model=model,
+-        dataset_root=dataset_root,
++        dataset_name=os.path.basename(os.path.normpath(dataset_root)),
+         use_omni_convex_decomp=False,  # We already pre-decomposed the values, so don' use omni convex decomp
+         use_usda=use_usda,
+         merge_fixed_joints=merge_fixed_joints,
+diff --git a/OmniGibson/omnigibson/utils/deprecated_utils.py b/OmniGibson/omnigibson/utils/deprecated_utils.py
+index 456a4847b..d5422ef65 100644
+--- a/OmniGibson/omnigibson/utils/deprecated_utils.py
++++ b/OmniGibson/omnigibson/utils/deprecated_utils.py
+@@ -1109,4 +1109,14 @@ def get_world_pose(fabric_prim):
+     result_transform = _get_world_pose_transform_w_scale(fabric_prim)
+     result_transform.Orthonormalize()
+     result_transform = np.transpose(result_transform)
+-    return result_transform[:3, 3], R.from_matrix(result_transform[:3, :3]).as_quat()
++    
++    # Extract rotation matrix
++    rot_mat = result_transform[:3, :3]
++    
++    # Check if determinant is positive (right-handed coordinate system)
++    det = np.linalg.det(rot_mat)
++    if det <= 0:
++        # Make it right-handed by multiplying by -1
++        rot_mat = -rot_mat
++    
++    return result_transform[:3, 3], R.from_matrix(rot_mat).as_quat()
+\ No newline at end of file

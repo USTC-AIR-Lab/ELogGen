@@ -1,0 +1,11 @@
+name: eloggen
+channels:
+  - conda-forge
+dependencies:
+  # Minimal bootstrap only. CUDA/GCC, PyTorch, OmniGibson/BDDL, Curobo,
+  # robomimic, and the pinned Python runtime are installed by setup.sh.
+  - python=3.10
+  - pip
+  - setuptools<=79
+  - wheel
+  - packaging

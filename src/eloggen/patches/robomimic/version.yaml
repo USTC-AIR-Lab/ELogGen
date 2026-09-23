@@ -1,0 +1,5 @@
+repository: https://github.com/ChengshuLi/robomimic
+commit: 34460828098dc8ca0694f330cf48daeb96a4ef3a
+overlay:
+  source: env_omnigibson.py
+  destination: robomimic/envs/env_omnigibson.py

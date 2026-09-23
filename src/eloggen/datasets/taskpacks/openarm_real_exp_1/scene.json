@@ -1,0 +1,752 @@
+{
+    "metadata": {
+        "task": {
+            "inst_to_name": {
+                "agent.n.01_1": "robot0",
+                "sack.n.01_1": "paper_bag_1",
+                "checkout.n.03_1": "checkout_counter_umnoqh_0",
+                "floor.n.01_1": "floor_small_0",
+                "apple.n.01_1": "object_1",
+                "lemon.n.01_1": "object_2"
+            },
+            "asset_replacements": {
+                "object_1": {
+                    "category": "apple",
+                    "model": "omzprq",
+                    "keeps_original_position_from": "object_1"
+                },
+                "object_2": {
+                    "category": "lime",
+                    "model": "iwjcjp",
+                    "keeps_original_position_from": "object_2"
+                }
+            },
+            "name": "openarm_real_exp_1",
+            "activity_definition": "openarm_real_exp_1",
+            "description": "Real-robot experiment scene 1: bag apple and lime with OpenArm."
+        }
+    },
+    "state": {
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ori": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "registry": {
+            "system_registry": {},
+            "object_registry": {
+                "checkout_counter_umnoqh_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.9528561234474182,
+                            3.4484457969665527,
+                            0.5303350687026978
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.7071068286895752,
+                            -0.7071067094802856
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "paper_bag_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -0.95,
+                            3.6,
+                            0.93
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.7071068286895752,
+                            -0.7071067094802856
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        }
+                    }
+                },
+                "robot0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.95,
+                            4.15,
+                            0.5
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            -0.7071,
+                            0.7071
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.3,
+                        -0.3,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.8,
+                        1.8,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "joint_vel": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "controllers": {
+                        "arm_left": {
+                            "goal_is_valid": true,
+                            "goal": {
+                                "target": [
+                                    0.5235987755982988,
+                                    0.0,
+                                    0.0,
+                                    1.9198621771937625,
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ]
+                            }
+                        },
+                        "gripper_left": {
+                            "goal_is_valid": true,
+                            "goal": {
+                                "target": [
+                                    0.0
+                                ]
+                            },
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0
+                                    ],
+                                    [
+                                        0.0
+                                    ],
+                                    [
+                                        0.0
+                                    ],
+                                    [
+                                        0.0
+                                    ],
+                                    [
+                                        0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": true
+                            }
+                        },
+                        "arm_right": {
+                            "goal_is_valid": true,
+                            "goal": {
+                                "target": [
+                                    -0.5235987755982988,
+                                    0.0,
+                                    0.0,
+                                    1.9198621771937625,
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ]
+                            }
+                        },
+                        "gripper_right": {
+                            "goal_is_valid": true,
+                            "goal": {
+                                "target": [
+                                    0.0
+                                ]
+                            },
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0
+                                    ],
+                                    [
+                                        0.0
+                                    ],
+                                    [
+                                        0.0
+                                    ],
+                                    [
+                                        0.0
+                                    ],
+                                    [
+                                        0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": true
+                            }
+                        }
+                    },
+                    "non_kin": {}
+                },
+                "openarm_base_pedestal_0p5m": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -0.95,
+                            4.25,
+                            0.25
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "object_1": {
+                    "root_link": {
+                        "pos": [
+                            -1.1,
+                            3.8,
+                            0.96
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "is_asleep": false,
+                    "non_kin": {}
+                },
+                "object_2": {
+                    "root_link": {
+                        "pos": [
+                            -0.8,
+                            3.8,
+                            0.96
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "is_asleep": false,
+                    "non_kin": {}
+                },
+                "floor_small_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.95,
+                            3.75,
+                            0.0
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "wall_back_small_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.95,
+                            5.35,
+                            1.25
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "wall_left_small_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -2.85,
+                            3.75,
+                            1.25
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.7071068286895752,
+                            0.7071067094802856
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "wall_right_small_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            0.95,
+                            3.75,
+                            1.25
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.7071068286895752,
+                            0.7071067094802856
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "wall_front_small_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -0.95,
+                            2.15,
+                            1.25
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                }
+            }
+        }
+    },
+    "objects_info": {
+        "init_info": {
+            "checkout_counter_umnoqh_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "checkout_counter_umnoqh_0",
+                    "category": "checkout_counter",
+                    "model": "umnoqh",
+                    "scale": [
+                        1.0000066757202148,
+                        1.0000057220458984,
+                        0.9999837279319763
+                    ],
+                    "fixed_base": true,
+                    "visual_only": false,
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ],
+                    "bddl_object_scope": null
+                }
+            },
+            "paper_bag_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "paper_bag_1",
+                    "category": "paper_bag",
+                    "model": "bzsxgw",
+                    "prim_type": 0,
+                    "expected_file_hash": "454af3deb21e2d736b8ec7b225d0ff3c",
+                    "scale": [
+                        2.2,
+                        2.2,
+                        1.0
+                    ],
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ],
+                    "fixed_base": true
+                }
+            },
+            "robot0": {
+                "class_module": "omnigibson.robots.openarm_bimanual",
+                "class_name": "OpenArmBimanual",
+                "args": {
+                    "name": "robot0",
+                    "fixed_base": true,
+                    "self_collisions": false,
+                    "action_type": "continuous",
+                    "action_normalize": false,
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "reset_joint_pos": [
+                        0.3,
+                        -0.3,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.8,
+                        1.8,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "obs_modalities": [],
+                    "grasping_mode": "sticky",
+                    "expected_file_hash": "e96588d55c341c2235dc5258b21916ca"
+                }
+            },
+            "openarm_base_pedestal_0p5m": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "openarm_base_pedestal_0p5m",
+                    "category": "pedestal",
+                    "model": "ussokc",
+                    "scale": [
+                        2.467409,
+                        0.664881,
+                        5.023769
+                    ],
+                    "fixed_base": true,
+                    "visual_only": false,
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ],
+                    "bddl_object_scope": null
+                }
+            },
+            "object_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "object_1",
+                    "category": "apple",
+                    "model": "omzprq",
+                    "scale": [
+                        0.75,
+                        0.75,
+                        0.75
+                    ],
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ]
+                }
+            },
+            "object_2": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "object_2",
+                    "category": "lime",
+                    "model": "iwjcjp",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ]
+                }
+            },
+            "floor_small_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "floor_small_0",
+                    "category": "floors",
+                    "model": "bcoszl",
+                    "scale": [
+                        0.85,
+                        1.057,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "visual_only": false,
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ],
+                    "bddl_object_scope": null
+                }
+            },
+            "wall_back_small_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "wall_back_small_0",
+                    "category": "walls",
+                    "model": "adqmpz",
+                    "scale": [
+                        1.8,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "visual_only": false,
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ],
+                    "bddl_object_scope": null
+                }
+            },
+            "wall_left_small_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "wall_left_small_0",
+                    "category": "walls",
+                    "model": "adqmpz",
+                    "scale": [
+                        1.5,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "visual_only": false,
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ],
+                    "bddl_object_scope": null
+                }
+            },
+            "wall_right_small_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "wall_right_small_0",
+                    "category": "walls",
+                    "model": "adqmpz",
+                    "scale": [
+                        1.5,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "visual_only": false,
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ],
+                    "bddl_object_scope": null
+                }
+            },
+            "wall_front_small_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "wall_front_small_0",
+                    "category": "walls",
+                    "model": "adqmpz",
+                    "scale": [
+                        1.8,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": true,
+                    "visual_only": false,
+                    "in_rooms": [
+                        "grocery_store_0"
+                    ],
+                    "bddl_object_scope": null
+                }
+            }
+        }
+    },
+    "versions": {
+        "omnigibson": {
+            "version": "3.7.0-alpha",
+            "git_hash": "8333d22eca6c5c9b5ab576619052f75c30306dcb"
+        },
+        "bddl": {
+            "version": "3.7.0a0",
+            "git_hash": "8333d22eca6c5c9b5ab576619052f75c30306dcb"
+        },
+        "og_dataset": {
+            "version": "1.2.0rc21"
+        },
+        "assets": {
+            "version": null,
+            "git_hash": "8333d22eca6c5c9b5ab576619052f75c30306dcb"
+        }
+    },
+    "init_info": {
+        "class_module": "omnigibson.scenes.interactive_traversable_scene",
+        "class_name": "InteractiveTraversableScene",
+        "args": {
+            "scene_model": "grocery_store_convenience",
+            "scene_instance": null,
+            "scene_file": null,
+            "trav_map_resolution": 0.1,
+            "default_erosion_radius": 0.0,
+            "trav_map_with_objects": true,
+            "num_waypoints": 10,
+            "waypoint_resolution": 0.2,
+            "load_object_categories": [
+                "floors",
+                "checkout_counter",
+                "walls"
+            ],
+            "not_load_object_categories": [],
+            "load_room_types": [],
+            "seg_map_resolution": 0.1
+        }
+    }
+}

@@ -1,0 +1,14 @@
+diff --git a/OmniGibson/omnigibson/scenes/interactive_traversable_scene.py b/OmniGibson/omnigibson/scenes/interactive_traversable_scene.py
+--- a/OmniGibson/omnigibson/scenes/interactive_traversable_scene.py
++++ b/OmniGibson/omnigibson/scenes/interactive_traversable_scene.py
+@@ -61,7 +61,9 @@ class InteractiveTraversableScene(TraversableScene):
+
+         # Infer scene directory
+         self.scene_dir = get_scene_path(scene_model, dataset_name=dataset_name)
+-        self.task_dir = get_task_instance_path(scene_model)
++        self.task_dir = None
++        if scene_file is None:
++            self.task_dir = get_task_instance_path(scene_model)
+
+         # Other values that will be loaded at runtime
+         self.load_object_categories = None

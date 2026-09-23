@@ -1,0 +1,39 @@
+name: openarm_fruit_basket_bagging
+family: object_container_storage
+backend: omnigibson
+files:
+  generation: generation.json
+  scene: scene.json
+  bddl: problem.bddl
+  cameras: cameras.json
+  source: source/source.hdf5
+  processed_source: source/processed.hdf5
+collection:
+  interface: eloggen.collectors.v1
+  action_shape: [16]
+  source_schema: omnigibson_data_wrapper.v1
+processing:
+  interface: EG_TaskPackOmniGibsonInterface
+  interface_type: omnigibson_bimanual
+runtime:
+  difficulty:
+    default: D0
+    variants: [D0, D1, D2]
+  robot:
+    type: OpenArm
+    bimanual: true
+    lerobot_type: openarm
+  compatibility:
+    openarm_cashier_style: true
+  interface:
+    tracked_objects:
+      object_1: object_1
+      object_2: object_2
+      object_3: object_3
+      object_4: object_4
+      paper_bag_1: paper_bag_1
+      basket_1: basket_1
+      checkout_counter_umnoqh_0: checkout_counter_umnoqh_0
+sha256:
+  source: 552a5fe2e97a1234b50c21dc555e2988da3b76ebf868057137355614fae69e7c
+  processed_source: 078caa54ad2a2a211b562044a26b5b0249572248afdeb34785671c5bcf8a1993

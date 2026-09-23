@@ -1,0 +1,33 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+.eloggen.local
+.eloggen/
+AGENTS.md
+runs/
+outputs
+/third_party/
+/cache/
+/tmp/
+.generation_scene_cache/
+.momagen_scene_cache/
+*.mp4
+*.log
+*.PASS
+.baseline/
+artifacts/
+dist/
+build/
+
+# Legacy external-source locations from older ElogGen layouts.
+/BEHAVIOR-1K/
+/robomimic/
+/deps/
+
+# Retired Phase 1 environment file.
+environments/momagen-reuse.yaml
+
+# The six HDF5 files under src/eloggen/datasets/taskpacks are intentionally
+# versioned with the repository.

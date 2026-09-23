@@ -1,0 +1,36 @@
+(define (problem openarm_fruit_basket_bagging-0)
+    (:domain omnigibson)
+
+    (:objects
+        sack.n.01_1 - sack.n.01
+        wicker_basket.n.01_1 - wicker_basket.n.01
+        checkout.n.03_1 - checkout.n.03
+        apple.n.01_1 - apple.n.01
+        orange.n.01_1 - orange.n.01
+        lemon.n.01_1 - lemon.n.01
+        pear.n.01_1 - pear.n.01
+        floor.n.01_1 - floor.n.01
+        agent.n.01_1 - agent.n.01
+    )
+
+    (:init
+        (ontop sack.n.01_1 checkout.n.03_1)
+        (ontop wicker_basket.n.01_1 checkout.n.03_1)
+        (ontop apple.n.01_1 checkout.n.03_1)
+        (ontop orange.n.01_1 checkout.n.03_1)
+        (ontop lemon.n.01_1 checkout.n.03_1)
+        (ontop pear.n.01_1 checkout.n.03_1)
+        (inroom checkout.n.03_1 grocery_store_0)
+        (inroom floor.n.01_1 grocery_store_0)
+        (ontop agent.n.01_1 floor.n.01_1)
+    )
+
+    (:goal
+        (and
+            (inside apple.n.01_1 sack.n.01_1)
+            (inside orange.n.01_1 sack.n.01_1)
+            (inside lemon.n.01_1 wicker_basket.n.01_1)
+            (inside pear.n.01_1 wicker_basket.n.01_1)
+        )
+    )
+)

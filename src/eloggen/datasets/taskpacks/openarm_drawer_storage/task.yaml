@@ -1,0 +1,49 @@
+name: openarm_drawer_storage
+family: articulated_storage
+backend: omnigibson
+files:
+  generation: generation.json
+  scene: scene.json
+  bddl: problem.bddl
+  cameras: cameras.json
+  source: source/source.hdf5
+  processed_source: source/processed.hdf5
+collection:
+  interface: eloggen.collectors.v1
+  action_shape: [16]
+  source_schema: omnigibson_data_wrapper.v1
+processing:
+  interface: EG_TaskPackOmniGibsonInterface
+  interface_type: omnigibson_bimanual
+runtime:
+  difficulty:
+    default: D0
+    variants: [D0, D1, D2]
+  robot:
+    type: OpenArm
+    bimanual: true
+    lerobot_type: openarm
+  compatibility:
+    openarm_cashier_style: true
+  interface:
+    tracked_objects:
+      object_1: object_1
+      object_2: object_2
+      drawer_cabinet_1: drawer_cabinet_1
+      checkout_counter_umnoqh_0: checkout_counter_umnoqh_0
+    articulated_targets:
+      lower_drawer:
+        object_name: drawer_cabinet_1
+        joint_name: j_link_1
+        drawer_link_name: link_1
+        fillable_link_name: meta__link_1_fillable_0_0_link
+        handle_link_name: null
+        handle_local_position: [0.18, 0.0, 0.0404]
+        handle_local_orientation_xyzw: [0.0, 0.0, 0.0, 1.0]
+        lower_limit: 0.0
+        upper_limit: 0.35203781723976135
+        closed_fraction: 0.08
+        open_fraction: 0.20
+sha256:
+  source: b7deddb715699b932fc56d1238868df48d3aeaf6a846bb31d0174fcb83825565
+  processed_source: a0c76c87cb89030b524d766a3d2e5a56335b38dcf3fd327107487343f8a5a256

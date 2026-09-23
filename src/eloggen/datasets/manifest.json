@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "resources": [
+    {
+      "id": "openarm_drawer_storage_source",
+      "group": "task-data",
+      "root": "project",
+      "path": "src/eloggen/datasets/taskpacks/openarm_drawer_storage/source/source.hdf5",
+      "size": 2200092,
+      "sha256": "b7deddb715699b932fc56d1238868df48d3aeaf6a846bb31d0174fcb83825565"
+    },
+    {
+      "id": "openarm_drawer_storage_processed",
+      "group": "task-data",
+      "root": "project",
+      "path": "src/eloggen/datasets/taskpacks/openarm_drawer_storage/source/processed.hdf5",
+      "size": 2846272,
+      "sha256": "a0c76c87cb89030b524d766a3d2e5a56335b38dcf3fd327107487343f8a5a256"
+    },
+    {
+      "id": "openarm_fruit_basket_bagging_source",
+      "group": "task-data",
+      "root": "project",
+      "path": "src/eloggen/datasets/taskpacks/openarm_fruit_basket_bagging/source/source.hdf5",
+      "size": 2422772,
+      "sha256": "552a5fe2e97a1234b50c21dc555e2988da3b76ebf868057137355614fae69e7c"
+    },
+    {
+      "id": "openarm_fruit_basket_bagging_processed",
+      "group": "task-data",
+      "root": "project",
+      "path": "src/eloggen/datasets/taskpacks/openarm_fruit_basket_bagging/source/processed.hdf5",
+      "size": 3360423,
+      "sha256": "078caa54ad2a2a211b562044a26b5b0249572248afdeb34785671c5bcf8a1993"
+    },
+    {
+      "id": "openarm_real_exp_1_source",
+      "group": "task-data",
+      "root": "project",
+      "path": "src/eloggen/datasets/taskpacks/openarm_real_exp_1/source/source.hdf5",
+      "size": 1416906,
+      "sha256": "9fe8f852fb8dc40f4b6110168b3ee0f239ba754b0f74000fb680d236071c3ffe"
+    },
+    {
+      "id": "openarm_real_exp_1_processed",
+      "group": "task-data",
+      "root": "project",
+      "path": "src/eloggen/datasets/taskpacks/openarm_real_exp_1/source/processed.hdf5",
+      "size": 2091795,
+      "sha256": "7184c380325521933346f9c889bc0e7599cb5a3dd386b51891725c6f3d9346b7"
+    },
+    {
+      "id": "openarm_robot_usd",
+      "group": "openarm-assets",
+      "root": "dataset",
+      "path": "custom_dataset/objects/robot/openarmbimanual/usd/openarmbimanual.usda",
+      "size": 311037207,
+      "sha256": "208f69fca20f762d7bfc02331f24df1a776ab96216c671a3173c88b44d5dc7c1",
+      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/usd/openarmbimanual.usda?download=true"
+    },
+    {
+      "id": "openarm_robot_metadata",
+      "group": "openarm-assets",
+      "root": "dataset",
+      "path": "custom_dataset/objects/robot/openarmbimanual/misc/metadata.json",
+      "size": 165,
+      "sha256": "f78a04103860ab457d2ed9ea7d39f6a36f2e971ee8522f2cf4765e0dd6ff62c3",
+      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/misc/metadata.json?download=true"
+    },
+    {
+      "id": "openarm_curobo_default",
+      "group": "openarm-assets",
+      "root": "dataset",
+      "path": "custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_default.yaml",
+      "size": 26654,
+      "sha256": "af04104c8333f1dd7515be7e52be0a2d583c5d1a50be05c109e79fdc0fb906ac",
+      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_default.yaml?download=true"
+    },
+    {
+      "id": "openarm_curobo_arm",
+      "group": "openarm-assets",
+      "root": "dataset",
+      "path": "custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_arm.yaml",
+      "size": 26655,
+      "sha256": "212d98c66ed2ada5094de3e7bbffc5afd4302eae8a8abc2d20d994a30286870c",
+      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_arm.yaml?download=true"
+    },
+    {
+      "id": "openarm_curobo_arm_no_torso",
+      "group": "openarm-assets",
+      "root": "dataset",
+      "path": "custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_arm_no_torso.yaml",
+      "size": 26654,
+      "sha256": "af04104c8333f1dd7515be7e52be0a2d583c5d1a50be05c109e79fdc0fb906ac",
+      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_arm_no_torso.yaml?download=true"
+    }
+  ]
+}

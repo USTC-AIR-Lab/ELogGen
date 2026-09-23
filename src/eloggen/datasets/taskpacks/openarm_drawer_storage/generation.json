@@ -1,0 +1,454 @@
+{
+    "name": "openarm_drawer_storage",
+    "type": "omnigibson_bimanual",
+    "experiment": {
+        "name": "demo",
+        "source": {
+            "dataset_path": null,
+            "filter_key": null,
+            "n": null,
+            "start": null
+        },
+        "generation": {
+            "path": null,
+            "guarantee": true,
+            "keep_failed": false,
+            "num_trials": 2000,
+            "select_src_per_subtask": false,
+            "transform_first_robot_pose": false,
+            "interpolate_from_last_target_pose": true
+        },
+        "task": {
+            "name": null,
+            "robot": null,
+            "gripper": null,
+            "interface": null,
+            "interface_type": null
+        },
+        "max_num_failures": 50,
+        "render_video": true,
+        "num_demo_to_render": 50,
+        "num_fail_demo_to_render": 50,
+        "log_every_n_attempts": 1,
+        "seed": 1
+    },
+    "obs": {
+        "collect_obs": true,
+        "camera_names": [
+            "left_wrist_cam",
+            "right_wrist_cam",
+            "base_cam"
+        ],
+        "camera_height": 256,
+        "camera_width": 256
+    },
+    "task": {
+        "task_spec": {
+            "phase_1": {
+                "type": "uncoordinated",
+                "arm_left": {
+                    "subtask_1": {
+                        "arm": "left",
+                        "object_ref": "drawer_cabinet_1",
+                        "attached_obj": null,
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 580,
+                        "MP_end_step": 350,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false,
+                        "action": "open",
+                        "object_label_zh": "下层抽屉",
+                        "object_label_en": "lower drawer"
+                    }
+                },
+                "arm_right": {
+                    "subtask_1": {
+                        "arm": "right",
+                        "object_ref": null,
+                        "attached_obj": null,
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 580,
+                        "MP_end_step": 580,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false
+                    }
+                },
+                "phase_action": "open_drawer",
+                "node_id": "open_drawer",
+                "active_effector": "left",
+                "articulated_action": {
+                    "target_id": "lower_drawer",
+                    "operation": "open",
+                    "source_replay": {
+                        "MP_end_step": 350,
+                        "subtask_term_step": 580
+                    },
+                    "success": {
+                        "open_fraction_gte": 0.2
+                    },
+                    "retarget_policy": {
+                        "type": "handle_frame_delta",
+                        "pose_source": "articulated_states/lower_drawer",
+                        "preserve_grasp_transform": true
+                    },
+                    "collision_policy": {
+                        "filter_drawer_support_links": true,
+                        "allow_handle_gripper_contact": true,
+                        "terminate_on_reverse_motion": true
+                    }
+                }
+            },
+            "phase_2": {
+                "type": "uncoordinated",
+                "arm_left": {
+                    "subtask_1": {
+                        "arm": "left",
+                        "object_ref": null,
+                        "attached_obj": null,
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 1120,
+                        "MP_end_step": 1120,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false
+                    }
+                },
+                "arm_right": {
+                    "subtask_1": {
+                        "arm": "right",
+                        "object_ref": "object_2",
+                        "attached_obj": null,
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 1120,
+                        "MP_end_step": 1000,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false,
+                        "action": "pick",
+                        "object_label_zh": "小闹钟",
+                        "object_label_en": "small alarm clock"
+                    }
+                },
+                "phase_action": "pick_object",
+                "node_id": "pick_object_2",
+                "active_effector": "right"
+            },
+            "phase_3": {
+                "type": "uncoordinated",
+                "arm_left": {
+                    "subtask_1": {
+                        "arm": "left",
+                        "object_ref": null,
+                        "attached_obj": null,
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 1300,
+                        "MP_end_step": 1300,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false
+                    }
+                },
+                "arm_right": {
+                    "subtask_1": {
+                        "arm": "right",
+                        "object_ref": "drawer_cabinet_1",
+                        "attached_obj": "object_2",
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 1300,
+                        "MP_end_step": 1220,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false,
+                        "action": "insert",
+                        "object_label_zh": "小闹钟",
+                        "object_label_en": "small alarm clock",
+                        "target_label_zh": "下层抽屉",
+                        "target_label_en": "lower drawer"
+                    }
+                },
+                "phase_action": "place_object_in_drawer",
+                "node_id": "place_object_2",
+                "active_effector": "right",
+                "placement_target": {
+                    "articulated_target_id": "lower_drawer",
+                    "relation": "inside"
+                }
+            },
+            "phase_4": {
+                "type": "uncoordinated",
+                "arm_left": {
+                    "subtask_1": {
+                        "arm": "left",
+                        "object_ref": null,
+                        "attached_obj": null,
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 1620,
+                        "MP_end_step": 1620,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false
+                    }
+                },
+                "arm_right": {
+                    "subtask_1": {
+                        "arm": "right",
+                        "object_ref": "object_1",
+                        "attached_obj": null,
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 1620,
+                        "MP_end_step": 1450,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false,
+                        "action": "pick",
+                        "object_label_zh": "骰子",
+                        "object_label_en": "toy die"
+                    }
+                },
+                "phase_action": "pick_object",
+                "node_id": "pick_object_1",
+                "active_effector": "right"
+            },
+            "phase_5": {
+                "type": "uncoordinated",
+                "arm_left": {
+                    "subtask_1": {
+                        "arm": "left",
+                        "object_ref": null,
+                        "attached_obj": null,
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 1820,
+                        "MP_end_step": 1820,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false
+                    }
+                },
+                "arm_right": {
+                    "subtask_1": {
+                        "arm": "right",
+                        "object_ref": "drawer_cabinet_1",
+                        "attached_obj": "object_1",
+                        "subtask_term_signal": null,
+                        "subtask_term_step": 1820,
+                        "MP_end_step": 1740,
+                        "retract_type": "no_retract",
+                        "subtask_term_offset_range": null,
+                        "selection_strategy": "random",
+                        "selection_strategy_kwargs": null,
+                        "action_noise": 0.0,
+                        "num_interpolation_steps": 5,
+                        "num_fixed_steps": 0,
+                        "apply_noise_during_interpolation": false,
+                        "action": "insert",
+                        "object_label_zh": "骰子",
+                        "object_label_en": "toy die",
+                        "target_label_zh": "下层抽屉",
+                        "target_label_en": "lower drawer"
+                    }
+                },
+                "phase_action": "place_object_in_drawer",
+                "node_id": "place_object_1",
+                "active_effector": "right",
+                "placement_target": {
+                    "articulated_target_id": "lower_drawer",
+                    "relation": "inside"
+                }
+            }
+        },
+        "initialization_distribution": {
+            "name": "D0",
+            "object_xy_magnitude": 0.06,
+            "object_yaw_deg": 7.5,
+            "cabinet_x_magnitude": 0.04,
+            "cabinet_y_magnitude": 0.025,
+            "cabinet_yaw_deg": 0.0,
+            "robot_arm_joint_magnitude_deg": 3.0,
+            "drawer_open_distance_m": 0.184,
+            "object_drawer_clearance_m": 0.05,
+            "object_pair_clearance_m": 0.05,
+            "drawer_open_fraction": [
+                0.0,
+                0.0
+            ],
+            "max_sampling_attempts": 50,
+            "difficulty": "D0"
+        }
+    },
+    "subtask_graph": {
+        "nodes": [
+            "open_drawer",
+            "pick_object_2",
+            "place_object_2",
+            "pick_object_1",
+            "place_object_1"
+        ],
+        "edges": [
+            [
+                "pick_object_2",
+                "place_object_2"
+            ],
+            [
+                "open_drawer",
+                "place_object_2"
+            ],
+            [
+                "pick_object_1",
+                "place_object_1"
+            ],
+            [
+                "open_drawer",
+                "place_object_1"
+            ]
+        ],
+        "atomic_chains": [],
+        "resource_constraints": {
+            "object_2": [
+                "pick_object_2",
+                "place_object_2"
+            ],
+            "object_1": [
+                "pick_object_1",
+                "place_object_1"
+            ],
+            "lower_drawer_handle": [
+                "open_drawer"
+            ],
+            "right_gripper": [
+                "pick_object_2",
+                "place_object_2",
+                "pick_object_1",
+                "place_object_1"
+            ]
+        },
+        "resource_events": {
+            "pick_object_2": [
+                {
+                    "resource": "right_gripper",
+                    "operation": "acquire",
+                    "token": "object_2"
+                }
+            ],
+            "place_object_2": [
+                {
+                    "resource": "right_gripper",
+                    "operation": "release",
+                    "token": "object_2"
+                }
+            ],
+            "pick_object_1": [
+                {
+                    "resource": "right_gripper",
+                    "operation": "acquire",
+                    "token": "object_1"
+                }
+            ],
+            "place_object_1": [
+                {
+                    "resource": "right_gripper",
+                    "operation": "release",
+                    "token": "object_1"
+                }
+            ]
+        }
+    },
+    "subtask_scheduling": {
+        "graph_source": "auto",
+        "strategy": "random_topological",
+        "fixed_order": [
+            "open_drawer",
+            "pick_object_2",
+            "place_object_2",
+            "pick_object_1",
+            "place_object_1"
+        ],
+        "legal_order_names": [
+            "open_first_object_1",
+            "open_first_object_2",
+            "object_1_pick_first",
+            "object_2_pick_first"
+        ]
+    },
+    "drawer_source": {
+        "trim_end_exclusive": 1900,
+        "source_order": [
+            "open_lower_drawer",
+            "object_2",
+            "object_1"
+        ],
+        "boundaries": [
+            {
+                "skill": "open_lower_drawer",
+                "MP_end_step": 350,
+                "subtask_term_step": 580
+            },
+            {
+                "skill": "pick_object_2",
+                "MP_end_step": 1000,
+                "subtask_term_step": 1120
+            },
+            {
+                "skill": "place_object_2",
+                "MP_end_step": 1220,
+                "subtask_term_step": 1300
+            },
+            {
+                "skill": "pick_object_1",
+                "MP_end_step": 1450,
+                "subtask_term_step": 1620
+            },
+            {
+                "skill": "place_object_1",
+                "MP_end_step": 1740,
+                "subtask_term_step": 1820
+            }
+        ]
+    }
+}
