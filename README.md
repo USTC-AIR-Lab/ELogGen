@@ -98,16 +98,14 @@ Use `bash setup.sh --data-root /path/to/storage/ELogGen` if large third-party re
 
 ### 3. Install OpenArm resources
 
+OpenArm resources are robot model files readily available from online
+open-source communities. See [resource guide](docs/resources.md) for the layout.
+
 ```bash
 eloggen resources install openarm \
   --dataset-root "$ELOGGEN_DATASET_ROOT" \
   --source-root /path/to/unpacked/openarm-resources
 ```
-
-Obtain the OpenArm runtime assets separately from an open-source community.
-Unpack them under the `dataset/custom_dataset/...` layout described in
-[`docs/resources.md`](docs/resources.md), then install them into the required
-BEHAVIOR dataset paths. The manifest verifies file sizes and SHA256 hashes.
 
 ### 4. Validate the environment
 
