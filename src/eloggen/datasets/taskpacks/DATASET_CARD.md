@@ -3,9 +3,9 @@
 ## Scope
 
 ElogGen provides one raw and one processed OmniGibson/robomimic-style HDF5
-demonstration per task as separately downloaded resources. These files provide simulator state and action
-trajectories used to synthesize additional demonstrations. They do not bundle the
-BEHAVIOR-1K asset dataset.
+demonstration per task directly in the repository. These files provide simulator
+state and action trajectories used to synthesize additional demonstrations.
+They do not bundle the BEHAVIOR-1K asset dataset.
 
 | Task | Raw frames | Processed frames | Action width |
 | --- | ---: | ---: | ---: |
@@ -13,13 +13,11 @@ BEHAVIOR-1K asset dataset.
 | `openarm_fruit_basket_bagging` | 2127 | 1876 | 16 |
 | `openarm_real_exp_1` | 1480 | 1480 | 16 |
 
-The Git repository keeps their stable relative paths but does not contain the
-HDF5 payloads. `src/eloggen/datasets/manifest.json` and each task's `task.yaml` record
-SHA256 checksums. Processed files
-contain `datagen_info`; the drawer task additionally contains phase annotations.
-Legacy host paths in HDF5 attributes have been replaced with task-relative paths.
-The untouched pre-sanitization files are retained only in the ignored local
-backup directory `.baseline/hdf5-before-release-sanitize-20260913`.
+The Git repository contains these six HDF5 payloads at stable relative paths.
+`src/eloggen/datasets/manifest.json` and each task's `task.yaml` record SHA256
+checksums. Processed files contain `datagen_info`; the drawer task additionally
+contains phase annotations. HDF5 attributes use task-relative paths rather than
+developer-machine paths.
 
 ## Collection
 
@@ -41,6 +39,6 @@ BEHAVIOR-1K/OmniGibson checkout and external assets prepared by
 
 ## Installation
 
-Configure the published task-data base URL in `.eloggen.local`, then run
-`python3 scripts/prepare_resources.py`. See `docs/resources.md` for online and
-offline installation layouts.
+No separate source-HDF5 download is required. To verify the bundled files, run
+`python3 scripts/prepare_resources.py --group task-data --check --project-root .`.
+See `docs/resources.md` for separately distributed simulator assets.

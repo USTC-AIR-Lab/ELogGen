@@ -79,9 +79,10 @@ Linux x86-64, an NVIDIA GPU with an Isaac Sim 4.5-compatible driver, Conda, Git,
 
 ### 1. Clone and create the environment
 
+Clone this repository's source code, then run the following commands from the
+repository root:
+
 ```bash
-git clone https://github.com/Nano-Ping/ElogGen.git
-cd ElogGen
 conda env create -f environments/eloggen-base.yaml
 conda activate eloggen
 ```
@@ -99,10 +100,14 @@ Use `bash setup.sh --data-root /path/to/storage/ELogGen` if large third-party re
 
 ```bash
 eloggen resources install openarm \
-  --dataset-root "$ELOGGEN_DATASET_ROOT"
+  --dataset-root "$ELOGGEN_DATASET_ROOT" \
+  --source-root /path/to/unpacked/openarm-resources
 ```
 
-OpenArm runtime assets are hosted separately in the public [ELogGen-Assets](https://huggingface.co/datasets/Nano-Ping/ELogGen-Assets) dataset.
+Obtain the OpenArm runtime assets separately from an open-source community.
+Unpack them under the `dataset/custom_dataset/...` layout described in
+[`docs/resources.md`](docs/resources.md), then install them into the required
+BEHAVIOR dataset paths. The manifest verifies file sizes and SHA256 hashes.
 
 ### 4. Validate the environment
 

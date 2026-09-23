@@ -20,54 +20,49 @@ byte size, and SHA256 in `src/eloggen/datasets/manifest.json`. Task manifests us
 package-relative HDF5 paths, so generation configuration does not depend on a
 machine's absolute directory layout.
 
-## Download configuration
+## OpenArm resource installation
 
-Environment installation never downloads OpenArm resources. The manifest contains
-the public, pinned Hugging Face URLs. Install and verify them after activating
-ElogGen:
+Environment setup does not download OpenArm resources. Obtain the OpenArm
+runtime assets separately from an open-source community, then unpack them into
+a local directory with this layout:
+
+```text
+/path/to/unpacked/openarm-resources/
+└── dataset/
+    └── custom_dataset/
+        └── objects/
+            └── robot/
+                └── openarmbimanual/
+                    ├── usd/openarmbimanual.usda
+                    ├── misc/metadata.json
+                    └── curobo/
+                        ├── openarmbimanual_description_curobo_default.yaml
+                        ├── openarmbimanual_description_curobo_arm.yaml
+                        └── openarmbimanual_description_curobo_arm_no_torso.yaml
+```
+
+After activating the environment, copy and verify these files using the
+resource installer:
 
 ```bash
 source scripts/activate_env.sh
 eloggen resources install openarm \
-  --dataset-root "$ELOGGEN_DATASET_ROOT"
-```
-
-The following environment variables remain available as advanced mirrors and
-offline-machine overrides:
-
-- `ELOGGEN_DATA_ROOT`: optional location for BEHAVIOR source and download caches
-- `ELOGGEN_DATASET_ROOT`: BEHAVIOR dataset directory created by setup
-- ELOGGEN_OPENARM_ASSET_BASE_URL: optional mirror directory URL containing the OpenArm layout; it overrides the manifest URLs
-
-For an optional mirror, the tool appends the manifest path, for example:
-
-```text
-${ELOGGEN_OPENARM_ASSET_BASE_URL}/custom_dataset/objects/robot/openarmbimanual/usd/openarmbimanual.usda
-```
-
-The default installation needs no URL argument. A mirror can be selected with:
-
-```bash
-eloggen resources install openarm \
   --dataset-root "$ELOGGEN_DATASET_ROOT" \
-  --base-url "$ELOGGEN_OPENARM_ASSET_BASE_URL"
-
+  --source-root /path/to/unpacked/openarm-resources
 eloggen resources check openarm \
   --dataset-root "$ELOGGEN_DATASET_ROOT"
 ```
 
-An unpacked OpenArm bundle can be used instead of URLs. Its top level contains
-`dataset/custom_dataset/...`:
+The destination is
+`$ELOGGEN_DATASET_ROOT/custom_dataset/objects/robot/openarmbimanual/`.
+Alternatively, place the five files there yourself and run the check command.
+The exact file sizes and SHA256 hashes are recorded in
+`src/eloggen/datasets/manifest.json`; files with mismatched hashes are
+rejected. No OpenArm download URL is embedded in the repository.
 
-```bash
-eloggen resources install openarm \
-  --dataset-root "$ELOGGEN_DATASET_ROOT" \
-  --source-root /path/to/unpacked/eloggen-resources
-```
-
-Downloads and copies use temporary files, verify size and SHA256, and only then
-move into the final location. Existing files with a wrong hash are never silently
-overwritten.
+Users with their own layout-compatible mirror may optionally supply
+`--base-url` or `ELOGGEN_OPENARM_ASSET_BASE_URL`. Without an explicit local
+source or mirror, the resource installer does not attempt a download.
 
 ## BEHAVIOR data
 
@@ -75,14 +70,4 @@ ElogGen downloads the required BEHAVIOR and OmniGibson assets into the configure
 data root. The 2025 Challenge task-instance bundle is not used by the three
 packaged ElogGen tasks and is not downloaded.
 
-Environment setup and OpenArm resource installation are independent. The default
-OpenArm URLs are already present in the manifest:
-
-```bash
-conda activate eloggen
-bash setup.sh
-
-source scripts/activate_env.sh
-eloggen resources install openarm \
-  --dataset-root "$ELOGGEN_DATASET_ROOT"
-```
+Environment setup and OpenArm resource installation are independent.

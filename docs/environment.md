@@ -12,14 +12,12 @@ ElogGen installs into a Python 3.10 Conda environment created and activated by t
 
 ## Standard installation
 
-Create and activate the environment through the machine's existing Conda installation:
+Clone this repository's source code first. From the repository root, create
+and activate the environment through the machine's existing Conda installation:
 
 ```bash
 conda env create -f environments/eloggen-base.yaml
 conda activate eloggen
-
-git clone https://github.com/Nano-Ping/ElogGen.git
-cd ElogGen
 
 bash setup.sh
 ```
@@ -72,7 +70,7 @@ bash setup.sh \
   --robomimic-repository git@github.com:ChengshuLi/robomimic.git
 ```
 
-For Git clones through an HTTP(S) proxy, add `--git-proxy http://host:port`. Package and Hugging Face downloads use the standard `HTTP_PROXY` and `HTTPS_PROXY` environment variables.
+For Git clones through an HTTP(S) proxy, add `--git-proxy http://host:port`. Package and BEHAVIOR asset downloads use the standard `HTTP_PROXY` and `HTTPS_PROXY` environment variables.
 
 ## What setup performs
 
@@ -93,13 +91,15 @@ cd /path/to/ElogGen
 source scripts/activate_env.sh
 
 eloggen resources install openarm \
-  --dataset-root "$ELOGGEN_DATASET_ROOT"
+  --dataset-root "$ELOGGEN_DATASET_ROOT" \
+  --source-root /path/to/unpacked/openarm-resources
 ```
 
-The manifest downloads the files from the public, pinned
-[Nano-Ping/ElogGen-Assets](https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets)
-dataset and verifies their sizes and SHA256 hashes. Set
-`ELOGGEN_OPENARM_ASSET_BASE_URL` only when using a mirror with the same layout.
+Obtain the OpenArm assets separately from an open-source community. The unpacked
+source directory must contain `dataset/custom_dataset/objects/robot/openarmbimanual/`;
+see [resources](resources.md) for the exact layout. The manifest verifies file
+sizes and SHA256 hashes. An independently supplied mirror URL can also be used,
+but no project-specific download URL is embedded in this repository.
 
 The pinned robomimic checkout is installed in editable mode from `third_party/robomimic`. The upstream package is not copied into `src/eloggen`.
 

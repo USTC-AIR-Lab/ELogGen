@@ -55,8 +55,7 @@
       "root": "dataset",
       "path": "custom_dataset/objects/robot/openarmbimanual/usd/openarmbimanual.usda",
       "size": 311037207,
-      "sha256": "208f69fca20f762d7bfc02331f24df1a776ab96216c671a3173c88b44d5dc7c1",
-      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/usd/openarmbimanual.usda?download=true"
+      "sha256": "208f69fca20f762d7bfc02331f24df1a776ab96216c671a3173c88b44d5dc7c1"
     },
     {
       "id": "openarm_robot_metadata",
@@ -64,8 +63,7 @@
       "root": "dataset",
       "path": "custom_dataset/objects/robot/openarmbimanual/misc/metadata.json",
       "size": 165,
-      "sha256": "f78a04103860ab457d2ed9ea7d39f6a36f2e971ee8522f2cf4765e0dd6ff62c3",
-      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/misc/metadata.json?download=true"
+      "sha256": "f78a04103860ab457d2ed9ea7d39f6a36f2e971ee8522f2cf4765e0dd6ff62c3"
     },
     {
       "id": "openarm_curobo_default",
@@ -73,8 +71,7 @@
       "root": "dataset",
       "path": "custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_default.yaml",
       "size": 26654,
-      "sha256": "af04104c8333f1dd7515be7e52be0a2d583c5d1a50be05c109e79fdc0fb906ac",
-      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_default.yaml?download=true"
+      "sha256": "af04104c8333f1dd7515be7e52be0a2d583c5d1a50be05c109e79fdc0fb906ac"
     },
     {
       "id": "openarm_curobo_arm",
@@ -82,8 +79,7 @@
       "root": "dataset",
       "path": "custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_arm.yaml",
       "size": 26655,
-      "sha256": "212d98c66ed2ada5094de3e7bbffc5afd4302eae8a8abc2d20d994a30286870c",
-      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_arm.yaml?download=true"
+      "sha256": "212d98c66ed2ada5094de3e7bbffc5afd4302eae8a8abc2d20d994a30286870c"
     },
     {
       "id": "openarm_curobo_arm_no_torso",
@@ -91,8 +87,7 @@
       "root": "dataset",
       "path": "custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_arm_no_torso.yaml",
       "size": 26654,
-      "sha256": "af04104c8333f1dd7515be7e52be0a2d583c5d1a50be05c109e79fdc0fb906ac",
-      "url": "https://huggingface.co/datasets/Nano-Ping/ElogGen-Assets/resolve/31537ff603780acd9ad77a6826a466b45407448c/custom_dataset/objects/robot/openarmbimanual/curobo/openarmbimanual_description_curobo_arm_no_torso.yaml?download=true"
+      "sha256": "af04104c8333f1dd7515be7e52be0a2d583c5d1a50be05c109e79fdc0fb906ac"
     }
   ]
 }

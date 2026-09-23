@@ -2,7 +2,7 @@
 
 ## Design goal
 
-ElogGen separates the reusable dataset-extension method from simulator compatibility code, task data, and private hardware collection. The public API should remain understandable without knowing the history of Open_Genbench.
+ElogGen separates the reusable dataset-extension method from simulator compatibility code, task data, and private hardware collection.
 
 ## Dependency direction
 
@@ -20,7 +20,8 @@ datasets / CLI
 
 External source adaptations are isolated under `patches`. Setup checks out pinned BEHAVIOR-1K, robomimic, and Curobo sources under `third_party/` and applies the versioned adaptations idempotently.
 
-No runtime module may import from `/home/openarm/Open_Genbench` or rely on that directory being present.
+No runtime module may rely on a developer-specific source checkout or absolute
+machine path.
 
 ## Task packs
 

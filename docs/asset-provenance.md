@@ -3,8 +3,9 @@
 ## External assets
 
 BEHAVIOR-1K object meshes, scene assets, OpenArm robot assets, and
-`omnigibson.key` remain in the external dataset directory. ElogGen links these
-files during setup and does not include them in its public source archive. Their
+`omnigibson.key` remain in the external dataset directory and are not included
+in the source archive. BEHAVIOR assets are installed during environment setup;
+OpenArm robot assets are installed separately using a user-supplied source. Their
 upstream licenses and access terms apply.
 
 ## Included integration files
