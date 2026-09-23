@@ -12,15 +12,14 @@ ElogGen installs into a Python 3.10 Conda environment created and activated by t
 
 ## Standard installation
 
-Create and activate the environment through the machine's existing Conda installation:
+Clone the current repository, then create and activate the environment from
+its root using the machine's existing Conda installation:
 
 ```bash
+git clone https://github.com/USTC-AIR-Lab/ELogGen.git
+cd ELogGen
 conda env create -f environments/eloggen-base.yaml
 conda activate eloggen
-
-git clone https://github.com/Nano-Ping/ElogGen.git
-cd ElogGen
-
 bash setup.sh
 ```
 
@@ -30,7 +29,7 @@ In each new shell:
 
 ```bash
 conda activate eloggen
-cd /path/to/ElogGen
+cd /path/to/ELogGen
 source scripts/activate_env.sh
 ```
 
@@ -41,7 +40,7 @@ source scripts/activate_env.sh
 Without an override, ElogGen groups all third-party source checkouts under `third_party/` and keeps caches and temporary setup files separate:
 
 ```text
-ElogGen/
+ELogGen/
 ├── third_party/
 │   ├── BEHAVIOR-1K/
 │   │   └── datasets/
@@ -57,10 +56,10 @@ This location is independent of the Conda environment. `cache/` stores reusable 
 
 ```bash
 bash setup.sh \
-  --data-root /path/to/storage/ElogGen
+  --data-root /path/to/storage/ELogGen
 ```
 
-The same structure is then created below `/path/to/storage/ElogGen`, including `/path/to/storage/ElogGen/third_party`. The setup command records the selected paths in the ignored `.eloggen.local` file.
+The same structure is then created below `/path/to/storage/ELogGen`, including `/path/to/storage/ELogGen/third_party`. The setup command records the selected paths in the ignored `.eloggen.local` file.
 
 ## Source access
 
@@ -89,7 +88,7 @@ OpenArm runtime assets are deliberately separate from environment setup. Install
 
 ```bash
 conda activate eloggen
-cd /path/to/ElogGen
+cd /path/to/ELogGen
 source scripts/activate_env.sh
 
 eloggen resources install openarm \
@@ -108,7 +107,7 @@ The pinned robomimic checkout is installed in editable mode from `third_party/ro
 Older ElogGen installations may still have:
 
 ```text
-ElogGen/
+ELogGen/
 ├── BEHAVIOR-1K/
 ├── robomimic/
 └── deps/curobo-<commit>/
@@ -122,7 +121,7 @@ After installation:
 
 ```bash
 conda activate eloggen
-cd /path/to/ElogGen
+cd /path/to/ELogGen
 source scripts/activate_env.sh
 bash scripts/validate_environment.sh
 ```

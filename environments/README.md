@@ -24,7 +24,7 @@ third_party/
 
 The Curobo directory deliberately uses the stable name `curobo` rather than embedding a commit hash in the directory name. Reproducibility is enforced by the pinned commit and the `.eloggen-source-commit` marker written by setup.
 
-When `--data-root /path/to/storage/ElogGen` is used, the same layout is created under `/path/to/storage/ElogGen/third_party`.
+When `--data-root /path/to/storage/ELogGen` is used, the same layout is created under `/path/to/storage/ELogGen/third_party`.
 
 ## Machine-local environment snapshot
 

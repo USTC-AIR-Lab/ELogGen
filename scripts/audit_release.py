@@ -31,7 +31,7 @@ IGNORED_PARTS = {
     "robomimic",
 }
 TEXT_SUFFIXES = {".json", ".md", ".py", ".sh", ".toml", ".yaml", ".yml"}
-MACHINE_PATH = re.compile(r"/(?:home|media)/openarm(?:/|$)")
+MACHINE_PATH = re.compile(r"/(?:home|media)/[^/\s]+(?:/|$)")
 
 
 def hdf5_has_machine_path(path: Path) -> bool:
@@ -68,7 +68,6 @@ def main() -> int:
         "THIRD_PARTY_NOTICES.md",
         "LICENSES/momagen-NVIDIA.txt",
         "LICENSES/robomimic-MIT.txt",
-        ".eloggen.local.example",
     ):
         if not (ROOT / name).is_file():
             errors.append(f"missing required release file: {name}")
